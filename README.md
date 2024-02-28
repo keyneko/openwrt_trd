@@ -240,7 +240,10 @@ opkg install luci-base luci-i18n-base-zh-cn
 # 安装shadowsocks-libev
 ```bash
 opkg install luci-app-shadowsocks-libev luci-i18n-shadowsocks-libev-zh-cn
-opkg -d usb install shadowsocks-libev
+opkg install shadowsocks-libev
+
+# 版本太旧，不支持新有服务端加密方式，放弃
+opkg remove shadowsocks-libev shadowsocks-libev-mbedtls --force-removal-of-dependent-packages 
 ```
 
 
