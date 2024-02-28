@@ -3,16 +3,14 @@ https://archive.openwrt.org/releases/17.01.7/targets/ar71xx/generic/lede-17.01.7
 https://openwrt.org/toh/tp-link/tl-wr703n
 
 # 更新软件包
+http://downloads.lede-project.org/releases/17.01.7/targets/ar71xx/generic/packages/
+https://mirror-03.infra.openwrt.org/
 ```bash
-opkg update 404
 opkg update
 opkg list
 opkg list-installed
 opkg list-upgradable
 opkg search
-
-# http://downloads.lede-project.org/releases/17.01.7/targets/ar71xx/generic/packages/
-# https://mirror-03.infra.openwrt.org/
 
 # 配置软件安装目录
 mount /dev/sda /mnt/sda
@@ -140,8 +138,27 @@ sudo apt-get -y install build-essential asciidoc binutils bzip2 gawk gettext git
 ./scripts/feeds update -a
 ./scripts/feeds install -a
 make download
+
 make menuconfig
+选择 Target System 为 Atheros AR7xxx/AR9xxx
+选择 Subtarget 为 Generic
+选择 Target Profile 为 TP-LINK TL-WR703N
+
 make kernel_menuconfig
+  Kernel type -> [*] MIPS FPU Emulator
+
+# 4M闪存加载太多东西会报错，修改成8M
+vi target/linux/ar71xx/image/tp-link.mk
+define Device/tl-wr703n-v1
+    $(Device/tplink-8mlzma)
+    DEVICE_TITLE := TP-LINK TL-WR703N
+    DEVICE_PACKAGES := kmod-usb-core kmod-usb2
+    BOARDNAME := TL-WR703N
+    DEVICE_PROFILE := TLWR703
+    TPLINK_HWID := 0x07030101
+    CONSOLE := ttyATH0,115200
+
+make V=s
 ```
 
 # UCI配置无线网络
@@ -152,6 +169,72 @@ uci set network.lan.dns='192.168.1.1'
 uci commit network
 /etc/init.d/network restart
 ```
+
+# Samba网络共享
+```bash
+opkg install samba36-server
+opkg install luci-app-samba
+
+vi /etc/config/samba
+config samba
+        option name 'Lede'
+        option workgroup 'WORKGROUP'
+        option description 'Lede'
+        option homes '1'
+
+config sambashare
+        option path '/mnt/sda'
+        option name 'sda'
+        option guest_ok 'yes'
+        option create_mask '777'
+        option dir_mask '777'
+        option read_only 'no'
+
+vi /etc/samba/smb.conf.template
+[global]
+  netbios name = |NAME|
+  display charset = |CHARSET|
+  interfaces = |INTERFACES|
+  server string = |DESCRIPTION|
+  unix charset = |CHARSET|
+  workgroup = |WORKGROUP|
+  browseable = yes
+  deadtime = 30
+  domain master = yes
+  encrypt passwords = true
+  enable core files = no
+  guest account = nobody
+  guest ok = yes
+  #invalid users = root
+  local master = yes
+  load printers = no
+  map to guest = Bad User
+  max protocol = SMB2
+  min receivefile size = 8192
+  null passwords = yes
+  obey pam restrictions = yes
+  os level = 20
+  passdb backend = smbpasswd
+  preferred master = yes
+  printable = no
+  security = user
+  smb encrypt = disabled
+  smb passwd file = /etc/samba/smbpasswd
+  socket options = TCP_NODELAY SO_RCVBUF=960000 SO_SNDBUF=960000
+  syslog = 2
+  use sendfile = yes
+  use mmap = yes
+  writeable = yes
+  disable spoolss = yes
+  host msdfs = no
+  strict allocate = No
+
+/etc/init.d/samba restart
+```
+
+
+
+
 
 ```
 # ----------------------------------------------------------
