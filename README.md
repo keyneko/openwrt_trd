@@ -232,6 +232,10 @@ vi /etc/samba/smb.conf.template
 /etc/init.d/samba restart
 ```
 
+# luci中文语言包
+```bash
+opkg install luci-base luci-i18n-base-zh-cn
+```
 
 
 
