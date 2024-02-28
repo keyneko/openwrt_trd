@@ -237,6 +237,11 @@ vi /etc/samba/smb.conf.template
 opkg install luci-base luci-i18n-base-zh-cn
 ```
 
+# 安装shadowsocks-libev
+```bash
+opkg install luci-app-shadowsocks-libev luci-i18n-shadowsocks-libev-zh-cn
+opkg -d usb install shadowsocks-libev
+```
 
 
 
